@@ -2,7 +2,7 @@
     "name": "Electrope Edge 2 AM",
     "dir_name": "triggevent-ee2-module",
     "icon_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/66/SMPTE_Color_Bars.svg/672px-SMPTE_Color_Bars.svg.png",
-    "webpage_url": "https://github.com/xpdota/triggevent-example-module",
-    "url_pattern": "https://raw.githubusercontent.com/xpdota/triggevent-example-module/gh-pages/master/%s",
+    "webpage_url": "https://github.com/brycecallender/electrope-edge-2",
+    "url_pattern": "https://raw.githubusercontent.com/BryceCallender/electrope-edge-2/gh-pages/master/%s",
     "description": "This is a long description. It can span multiple lines.\n\nAlso, here is a line break test."
 }
