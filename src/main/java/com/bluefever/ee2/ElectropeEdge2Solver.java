@@ -115,8 +115,8 @@ public class ElectropeEdge2Solver implements PluginTab {
 			}
 
 
-			log.info("Short Debuffs: {}", shortDebuffs.keySet());
-			log.info("Long Debuffs: {}", longDebuffs.keySet());
+			log.info("Short Debuffs: {}", shortDebuffs.keySet().stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
+			log.info("Long Debuffs: {}", longDebuffs.keySet().stream().map(XivEntity::getName).collect(Collectors.joining(", ")));
 
 			context.accept(new WitchGleamCountSolvedEvent(shortDebuffs));
 
