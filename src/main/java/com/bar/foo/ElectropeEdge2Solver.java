@@ -8,6 +8,9 @@ import gg.xp.xivsupport.events.actlines.events.WipeEvent;
 import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
 import gg.xp.xivsupport.events.actlines.events.BuffApplied;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
+import gg.xp.xivsupport.events.debug.DebugCommand;
+import gg.xp.xivsupport.events.state.XivState;
+import gg.xp.xivsupport.events.triggers.jails.UnsortedTitanJailsSolvedEvent;
 import gg.xp.xivsupport.events.triggers.marks.ClearAutoMarkRequest;
 import gg.xp.xivsupport.events.triggers.marks.adv.MarkerSign;
 import gg.xp.xivsupport.events.triggers.marks.adv.SpecificAutoMarkRequest;
@@ -25,9 +28,10 @@ import org.slf4j.LoggerFactory;
 import java.awt.Component;
 
 import java.time.Duration;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @ScanMe
 public class ElectropeEdge2Solver implements PluginTab {
@@ -59,6 +63,61 @@ public class ElectropeEdge2Solver implements PluginTab {
 	public Component getTabContents() {
         return new TitleBorderFullsizePanel("EE2 Plugin");
     }
+
+	@HandleEvents
+	public void amTest(EventContext context, DebugCommand event) {
+		XivState xivState = context.getStateInfo().get(XivState.class);
+		List<XivPlayerCharacter> partyList = xivState.getPartyList();
+		if (event.getCommand().equals("ee2test")) {
+			List<XivPlayerCharacter> supports = new ArrayList<>(partyList
+                    .stream()
+                    .filter(p -> p.getJob().isSupport())
+                    .toList());
+
+			List<XivPlayerCharacter> dps = new ArrayList<>(partyList
+					.stream()
+					.filter(p -> p.getJob().isDps())
+					.toList());
+
+			Map<XivPlayerCharacter, Integer> shortDebuffs;
+			Map<XivPlayerCharacter, Integer> longDebuffs;
+
+			Random rand = new Random();
+			// Get Random Supports
+            shortDebuffs = IntStream
+					.range(0, 2)
+					.map(i -> rand.nextInt(supports.size()))
+					.mapToObj(supports::remove)
+					.collect(Collectors.toMap(Function.identity(), randomSupport -> 0, (a, b) -> b));
+
+			shortDebuffs.putAll(IntStream
+					.range(0, 2)
+					.map(i -> rand.nextInt(dps.size()))
+					.mapToObj(dps::remove)
+					.collect(Collectors.toMap(Function.identity(), randomDps -> 0, (a, b) -> b)));
+
+			longDebuffs = IntStream
+					.range(0, 2)
+					.map(i -> rand.nextInt(supports.size()))
+					.mapToObj(supports::remove)
+					.collect(Collectors.toMap(Function.identity(), randomSupport -> 0, (a, b) -> b));
+
+			longDebuffs.putAll(IntStream
+					.range(0, 2)
+					.map(i -> rand.nextInt(dps.size()))
+					.mapToObj(dps::remove)
+					.collect(Collectors.toMap(Function.identity(), randomDps -> 0, (a, b) -> b)));
+
+			log.info("Short Debuffs: {}", shortDebuffs.keySet());
+			log.info("Long Debuffs: {}", longDebuffs.keySet());
+
+			context.accept(new WitchGleamCountSolvedEvent(shortDebuffs));
+
+			WitchGleamCountSolvedEvent nextSet = new WitchGleamCountSolvedEvent(longDebuffs);
+			nextSet.setDelayedEnqueueOffset(Duration.ofMillis(timeTillNextGroupMs));
+			context.enqueue(nextSet);
+		}
+	}
 
 	@HandleEvents
 	public void handleWipe(EventContext context, DutyCommenceEvent event) {
