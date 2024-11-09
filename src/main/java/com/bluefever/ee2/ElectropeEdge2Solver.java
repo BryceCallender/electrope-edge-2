@@ -78,34 +78,42 @@ public class ElectropeEdge2Solver implements PluginTab {
 					.filter(p -> p.getJob().isDps())
 					.toList());
 
-			Map<XivPlayerCharacter, Integer> shortDebuffs;
-			Map<XivPlayerCharacter, Integer> longDebuffs;
+			Map<XivPlayerCharacter, Integer> shortDebuffs = new HashMap<>();
+			Map<XivPlayerCharacter, Integer> longDebuffs = new HashMap<>();
 
 			Random rand = new Random();
-			// Get Random Supports
-            shortDebuffs = IntStream
-					.range(0, 2)
-					.map(i -> rand.nextInt(supports.size()))
-					.mapToObj(supports::remove)
-					.collect(Collectors.toMap(Function.identity(), randomSupport -> 0, (a, b) -> b));
 
-			shortDebuffs.putAll(IntStream
-					.range(0, 2)
-					.map(i -> rand.nextInt(dps.size()))
-					.mapToObj(dps::remove)
-					.collect(Collectors.toMap(Function.identity(), randomDps -> 0, (a, b) -> b)));
+			List<Integer> shortOptions = Arrays.asList(2,3);
+			List<Integer> longOptions = Arrays.asList(2,3);
 
-			longDebuffs = IntStream
-					.range(0, 2)
-					.map(i -> rand.nextInt(supports.size()))
-					.mapToObj(supports::remove)
-					.collect(Collectors.toMap(Function.identity(), randomSupport -> 0, (a, b) -> b));
+			for (Integer option: shortOptions) {
+				if (!supports.isEmpty()) {
+					int randomSupportIndex = rand.nextInt(supports.size());
+					XivPlayerCharacter support = supports.remove(randomSupportIndex);
+					shortDebuffs.put(support, option);
+				}
 
-			longDebuffs.putAll(IntStream
-					.range(0, 2)
-					.map(i -> rand.nextInt(dps.size()))
-					.mapToObj(dps::remove)
-					.collect(Collectors.toMap(Function.identity(), randomDps -> 0, (a, b) -> b)));
+				if (!dps.isEmpty()) {
+					int randomDpsIndex = rand.nextInt(dps.size());
+					XivPlayerCharacter dpsChar = dps.remove(randomDpsIndex);
+					shortDebuffs.put(dpsChar, option);
+				}
+			}
+
+			for (Integer option: longOptions) {
+				if (!supports.isEmpty()) {
+					int randomSupportIndex = rand.nextInt(supports.size());
+					XivPlayerCharacter support = supports.remove(randomSupportIndex);
+					longDebuffs.put(support, option);
+				}
+
+				if (!dps.isEmpty()) {
+					int randomDpsIndex = rand.nextInt(dps.size());
+					XivPlayerCharacter dpsChar = dps.remove(randomDpsIndex);
+					longDebuffs.put(dpsChar, option);
+				}
+			}
+
 
 			log.info("Short Debuffs: {}", shortDebuffs.keySet());
 			log.info("Long Debuffs: {}", longDebuffs.keySet());
