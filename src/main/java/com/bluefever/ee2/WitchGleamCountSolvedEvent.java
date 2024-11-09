@@ -1,4 +1,4 @@
-package com.bar.foo;
+package com.bluefever.ee2;
 
 import gg.xp.reevent.events.BaseEvent;
 import gg.xp.xivsupport.models.XivPlayerCharacter;
