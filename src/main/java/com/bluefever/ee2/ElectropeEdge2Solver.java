@@ -3,10 +3,7 @@ package com.bluefever.ee2;
 import gg.xp.reevent.events.EventContext;
 import gg.xp.reevent.scan.HandleEvents;
 import gg.xp.reevent.scan.ScanMe;
-import gg.xp.xivsupport.events.actlines.events.ZoneChangeEvent;
-import gg.xp.xivsupport.events.actlines.events.WipeEvent;
-import gg.xp.xivsupport.events.actlines.events.AbilityUsedEvent;
-import gg.xp.xivsupport.events.actlines.events.BuffApplied;
+import gg.xp.xivsupport.events.actlines.events.*;
 import gg.xp.xivsupport.events.actlines.events.actorcontrol.DutyCommenceEvent;
 import gg.xp.xivsupport.events.debug.DebugCommand;
 import gg.xp.xivsupport.events.state.XivState;
@@ -46,7 +43,7 @@ public class ElectropeEdge2Solver implements PluginTab {
 	private static final int lightningCageAbilityId = 0x95CE;
 
 	private static final int longDebuffTimer = 30;
-	private static final long timeTillNextGroupMs = 20000L; // milliseconds
+	private static final long timeTillNextGroupMs = 17000L; // milliseconds
 
     public ElectropeEdge2Solver(PersistenceProvider persistence) {
 		enableAutomark = new BooleanSetting(persistence, "ee2-solver.automark.enable", true);
@@ -166,34 +163,38 @@ public class ElectropeEdge2Solver implements PluginTab {
 	}
 
 	@HandleEvents
-	public void handleAbilitiesUsed(EventContext context, AbilityUsedEvent event) {
+	public void handleLightningCage(EventContext context, AbilityCastStart event) {
 		long abilityId = event.getAbility().getId();
-		if (abilityId != witchGleamAbilityId && abilityId != lightningCageAbilityId) {
+		if (abilityId != lightningCageAbilityId) {
 			return;
 		}
 
-		XivCombatant source = event.getSource();
+		// lightning cage indicates the first group of people need to be marked
+        context.accept(new WitchGleamCountSolvedEvent(shortDebuffPlayers));
+
+        WitchGleamCountSolvedEvent nextSet = new WitchGleamCountSolvedEvent(longDebuffPlayers);
+        nextSet.setDelayedEnqueueOffset(Duration.ofMillis(timeTillNextGroupMs));
+        context.enqueue(nextSet);
+    }
+
+
+	@HandleEvents
+	public void handleWitchGleam(EventContext context, AbilityUsedEvent event) {
+		long abilityId = event.getAbility().getId();
+		if (abilityId != witchGleamAbilityId) {
+			return;
+		}
+
 		XivCombatant target = event.getTarget();
 
-		if (abilityId == witchGleamAbilityId) {
-			if (target instanceof XivPlayerCharacter pc) {
-				if (longDebuffPlayers.containsKey(pc)) {
-					longDebuffPlayers.merge(pc, 1, Integer::sum);
-				} else {
-					shortDebuffPlayers.merge(pc, 1, Integer::sum);
-				}
-			}
-		}
-
-		// lightning cage indicates the first group of people need to be marked
-		if (abilityId == lightningCageAbilityId) {
-			context.accept(new WitchGleamCountSolvedEvent(shortDebuffPlayers));
-
-			WitchGleamCountSolvedEvent nextSet = new WitchGleamCountSolvedEvent(longDebuffPlayers);
-			nextSet.setDelayedEnqueueOffset(Duration.ofMillis(timeTillNextGroupMs));
-			context.enqueue(nextSet);
-		}
-	}
+        if (target instanceof XivPlayerCharacter pc) {
+            if (longDebuffPlayers.containsKey(pc)) {
+                longDebuffPlayers.merge(pc, 1, Integer::sum);
+            } else {
+                shortDebuffPlayers.merge(pc, 1, Integer::sum);
+            }
+        }
+    }
 
 	private void clearPlayers() {
 		log.info("Cleared players");
